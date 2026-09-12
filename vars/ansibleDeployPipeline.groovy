@@ -46,13 +46,7 @@ def call(String configFile = 'redis.properties') {
 
             stage('Check Ansible') {
                 steps {
-                    sh '''
-                        if ! command -v ansible-playbook &> /dev/null; then
-                            echo "Installing ansible..."
-                            sudo apt-get update -y && sudo apt-get install -y ansible
-                        fi
-                        ansible --version
-                    '''
+                   sh 'ansible --version'
                 }
             }
 
