@@ -7,7 +7,6 @@ def call(String configFile = 'redis.properties') {
         }
 
         stages {
-
             stage('Clone') {
                 steps {
                     sh 'rm -rf repo'
@@ -19,7 +18,14 @@ def call(String configFile = 'redis.properties') {
                 steps {
                     script {
                         def configText = libraryResource(configFile)
-                        def props = readProperties text: configText
+                        def props = [:]
+                        configText.readLines().each { line ->
+                            line = line.trim()
+                            if (line && !line.startsWith('#') && line.contains('=')) {
+                                def parts = line.split('=', 2)
+                                props[parts[0].trim()] = parts[1].trim()
+                            }
+                        }
                         env.SLACK_CHANNEL_NAME  = props.SLACK_CHANNEL_NAME
                         env.ENVIRONMENT         = props.ENVIRONMENT
                         env.CODE_BASE_PATH      = props.CODE_BASE_PATH
