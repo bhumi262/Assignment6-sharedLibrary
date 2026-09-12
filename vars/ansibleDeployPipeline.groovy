@@ -2,6 +2,10 @@ def call(String configFile = 'redis.properties') {
     pipeline {
         agent any
 
+        environment {
+            ANSIBLE_HOST_KEY_CHECKING = 'False'
+        }
+
         stages {
 
             stage('Clone') {
@@ -34,10 +38,24 @@ def call(String configFile = 'redis.properties') {
                 }
             }
 
+            stage('Check Ansible') {
+                steps {
+                    sh '''
+                        if ! command -v ansible-playbook &> /dev/null; then
+                            echo "Installing ansible..."
+                            sudo apt-get update -y && sudo apt-get install -y ansible
+                        fi
+                        ansible --version
+                    '''
+                }
+            }
+
             stage('Playbook Execution') {
                 steps {
                     dir("repo/${env.CODE_BASE_PATH}") {
-                        sh "ansible-playbook -i inventory.ini site.yml"
+                        withCredentials([sshUserPrivateKey(credentialsId: 'redis-ec2-key', keyFileVariable: 'SSH_KEY')]) {
+                            sh "ansible-playbook -i inventory.ini site.yml --private-key=\$SSH_KEY"
+                        }
                     }
                 }
             }
