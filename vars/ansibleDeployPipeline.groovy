@@ -1,4 +1,4 @@
-def call(String configFile = 'config.properties') {
+def call(String configFile = 'redis.properties') {
     pipeline {
         agent any
 
@@ -6,14 +6,16 @@ def call(String configFile = 'config.properties') {
 
             stage('Clone') {
                 steps {
-                    checkout scm
+                    sh 'rm -rf repo'
+                    sh 'git clone https://github.com/bhumi262/AnsibleRedis.git repo'
                 }
             }
 
             stage('Load Config') {
                 steps {
                     script {
-                        def props = readProperties file: 'Ansible-Assignment5/' +configFile
+                        def configText = libraryResource(configFile)
+                        def props = readProperties text: configText
                         env.SLACK_CHANNEL_NAME  = props.SLACK_CHANNEL_NAME
                         env.ENVIRONMENT         = props.ENVIRONMENT
                         env.CODE_BASE_PATH      = props.CODE_BASE_PATH
@@ -34,7 +36,9 @@ def call(String configFile = 'config.properties') {
 
             stage('Playbook Execution') {
                 steps {
-                    sh "ansible-playbook -i inventory.ini site.yml"
+                    dir("repo/${env.CODE_BASE_PATH}") {
+                        sh "ansible-playbook -i inventory.ini site.yml"
+                    }
                 }
             }
 
