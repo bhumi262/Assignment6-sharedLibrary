@@ -13,7 +13,7 @@ def call(String configFile = 'config.properties') {
             stage('Load Config') {
                 steps {
                     script {
-                        def props = readProperties file: configFile
+                        def props = readProperties file: 'Ansible-Assignment5/' +configFile
                         env.SLACK_CHANNEL_NAME  = props.SLACK_CHANNEL_NAME
                         env.ENVIRONMENT         = props.ENVIRONMENT
                         env.CODE_BASE_PATH      = props.CODE_BASE_PATH
